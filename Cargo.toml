@@ -1,14 +1,18 @@
-[package]
-name = "bettervector"
-version = "0.1.0"
-edition = "2024"
 
-[dependencies]
-hnsw = "0.11.0"
+[workspace]
+members = [
+  "crates/*"
+]
+workspace.resolver= "3"
 
+[workspace.dependencies]
 
-
-[features]
-default = ["adj_list"]
-adj_list = []
-adj_mat = []
+# [package]
+# name = "bettervector"
+# version = "0.1.0"
+# edition = "2024"
+#
+# [dependencies]
+# hnsw = "0.11.0"
+#
+# [features]
