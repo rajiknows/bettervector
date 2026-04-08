@@ -1,14 +1,13 @@
 use clap::Parser;
 
-mod ingestion;
 mod index;
+mod ingestion;
 mod query;
 mod types;
 
-use ingestion::ingest_document;
 use index::InvertedIndex;
+use ingestion::ingest_document;
 use query::search;
-use types::{Document};
 
 #[derive(Parser, Debug)]
 #[command(version, about)]
@@ -26,16 +25,16 @@ fn main() {
     let mut index = InvertedIndex::new();
 
     if let Some(path) = args.upload {
-        let docs = ingest_document(&path);
-        for doc in docs {
+        if let Some(doc) = ingest_document(&path) {
             index.add_document(doc);
         }
     }
 
     if let Some(q) = args.query {
-        let results = search(&index, &q);
-        for r in results {
-            println!("{:?}", r);
+        if let Some(results) = search(&index, &q) {
+            for doc_id in results {
+                println!("{}", doc_id);
+            }
         }
     }
 }

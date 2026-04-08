@@ -1,6 +1,7 @@
 pub type DocId = u64;
 pub type ChunkId = u64;
 
+#[derive(Debug)]
 pub struct Document {
     pub id: DocId,
     pub text: String,
