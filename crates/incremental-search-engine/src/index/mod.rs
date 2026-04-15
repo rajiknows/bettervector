@@ -7,12 +7,17 @@ use std::collections::HashMap;
 pub struct InvertedIndex {
     // term -> list of (doc_id, term_freq)
     pub postings: HashMap<String, Vec<(DocId, u32)>>,
+    // the df is can be derived from the postings , right ??
+    // for example :
+    //      let n_docs = postings.get(term).len();
+    pub total_docs: usize,
 }
 
 impl InvertedIndex {
     pub fn new() -> Self {
         Self {
             postings: HashMap::new(),
+            total_docs: 0,
         }
     }
 
@@ -22,10 +27,17 @@ impl InvertedIndex {
         }
 
         let tokenized_data = tokenize(doc.text);
+        let mut term_counts: HashMap<String, u32> = HashMap::new();
         for term in tokenized_data {
-            let postings_list = self.postings.entry(term).or_insert_with(Vec::new);
-            postings_list.push((doc.id, 1));
+            *term_counts.entry(term).or_insert(0) += 1;
         }
+
+        for (term, count) in term_counts {
+            let postings_list = self.postings.entry(term).or_insert_with(Vec::new);
+            postings_list.push((doc.id, count));
+        }
+
+        self.total_docs += 1;
         true
     }
 

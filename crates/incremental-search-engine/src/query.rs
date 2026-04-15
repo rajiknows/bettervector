@@ -6,29 +6,32 @@ use crate::{
 };
 
 pub fn search(index: &InvertedIndex, query: &str) -> Option<Vec<DocId>> {
-    // tokenize the query
     let tokenized_query = tokenize(query.into());
+    let n = index.total_docs as f64;
 
-    // doc_ids -> term_count
-    let mut doc_ids_to_term: HashMap<DocId, usize> = HashMap::new();
+    let mut doc_scores: HashMap<DocId, f64> = HashMap::new();
 
     for term in tokenized_query {
-        // search for this term in the postings
         if let Some(matched) = index.postings.get(&term) {
-            // so these documents have this word
-            // the document having the majority of query terms is ranked top
-            for doc_tf in matched {
-                *doc_ids_to_term.entry(doc_tf.0).or_insert(0) += 1;
+            let df = matched.len() as f64;
+            let idf = (n / df).ln();
+
+            for (doc_id, tf) in matched {
+                let tf_idf = *tf as f64 * idf;
+                *doc_scores.entry(*doc_id).or_insert(0.0) += tf_idf;
             }
         }
     }
-    // return the doc_ids whose count is highest
-    let mut doc_ids: Vec<DocId> = doc_ids_to_term.keys().copied().collect();
+
+    let mut doc_ids: Vec<DocId> = doc_scores.keys().copied().collect();
     doc_ids.sort_by(|a, b| {
-        let count_a = doc_ids_to_term.get(a).unwrap_or(&0);
-        let count_b = doc_ids_to_term.get(b).unwrap_or(&0);
-        count_b.cmp(count_a) // descending order
+        let score_a = doc_scores.get(a).unwrap_or(&0.0);
+        let score_b = doc_scores.get(b).unwrap_or(&0.0);
+        score_b
+            .partial_cmp(score_a)
+            .unwrap_or(std::cmp::Ordering::Equal)
     });
+
     Some(doc_ids)
 }
 
